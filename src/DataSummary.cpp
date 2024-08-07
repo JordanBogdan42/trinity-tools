@@ -20,13 +20,13 @@ using namespace std;
 DataSummary::DataSummary(char* dateStr){
     evTimes = vector<vector<ULong64_t>>(2,vector<ULong64_t>());
     evMeans = vector<vector<Double_t>>(7,vector<Double_t>());
-    pixMeans = vector<vector<Double_T>>(7,vector<Double_t>(maxCh,0.0));
+    pixMeans = vector<vector<Double_t>>(7,vector<Double_t>(maxCh,0.0));
 
     string evStr = Form("%s%s/RawDataMerged/",dataDir.c_str(),dateStr);
     ReadEv(evStr);
 }
 
-DataSummary::ReadEv(string readStr){
+void DataSummary::ReadEv(string readStr){
     TTree *tree;
     Event *ev;
 
