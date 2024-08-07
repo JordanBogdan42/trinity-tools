@@ -10,6 +10,7 @@
 BIN_DIR := .
 SRC_DIR := $(BIN_DIR)/src
 INC_DIR := $(BIN_DIR)/include
+OBJ_DIR := $(BIN_DIR)/obj
 EXE := $(BIN_DIR)/test
 DICT_DIR := ${EXACT_DIR}/dict
 
@@ -57,8 +58,8 @@ CXXFLAGS     += $(INCLUDEFLAGS)
 
 ALLFLAGS = $(CXXFLAGS) $(CPPFLAGS) -Wall
 
-SRC := $(wildcard $(BIN_DIR)/*.cpp)
-OBJ := $(SRC:$(BIN_DIR)/%.cpp=$(BIN_DIR)/%.o)
+SRC := $(wildcard $(SRC_DIR)/*.cpp)
+OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CP  := cp
 
