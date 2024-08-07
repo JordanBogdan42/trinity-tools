@@ -82,7 +82,7 @@ void DataSummary::ReadEv(string readStr){
 
                 tree = (TTree*)f0->Get("HLED");
                 ev = new Event();
-                SetBranches(&ev);
+                tree->SetBranchAddress("Events", &ev);
                 nEntries = tree->GetEntries();
                 if(nEntries == 0){
                     cout << "File has no data in the \"HLED\" branch...skipping";
