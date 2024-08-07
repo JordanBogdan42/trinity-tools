@@ -1,5 +1,7 @@
 #include "constants.h"
 
+#include <string>
+
 using namespace std;
 
 const string dataDir = "/storage/hive/project/phy-otte/shared/Trinity/Data/";
