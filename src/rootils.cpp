@@ -4,6 +4,8 @@
 
 #include <Event.h>
 
+#include <vector>
+
 void SetBranches(Event **evD)
 {
 	tree->SetBranchAddress("Events", evD);

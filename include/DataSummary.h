@@ -1,6 +1,8 @@
 #ifndef DataSummary_H
 #define DataSummary_H
 
+#include <vector>
+
 using namespace std;
 
 class DataSummary {
@@ -10,5 +12,7 @@ class DataSummary {
 		vector<vector<Double_t>> pixMeans;
 		void ReadEv(string readStr);
 	public:
-		DataSummary(string dateStr);
-}
+		DataSummary(char* dateStr);
+};
+
+#endif
