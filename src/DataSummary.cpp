@@ -41,10 +41,10 @@ void DataSummary::ReadEv(string readStr){
                 TFile *f0 = TFile::Open(fileStr.c_str());
                 tree = (TTree*)f0->Get("Test");
                 ev = new Event();
-                SetBranches(&ev);
+                tree->SetBranchAddress("Events", &ev);
                 int nEntries = tree->GetEntries();
                 if(nEntries == 0){
-                    cout << "File has no data in the \"Test\" branch...skipping"
+                    cout << "File has no data in the \"Test\" branch...skipping";
                     break;
                 }
                 cout << "\"Test\" Events: " << nEntries << endl;

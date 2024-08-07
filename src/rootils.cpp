@@ -9,11 +9,6 @@
 #include <vector>
 #include <cmath>
 
-void SetBranches(Event **evD)
-{
-	tree->SetBranchAddress("Events", evD);
-}
-
 Double_t Median(vector<Double_t> v)
 {
 	//Size of vector
