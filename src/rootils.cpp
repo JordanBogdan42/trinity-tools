@@ -2,6 +2,8 @@
 
 #include "constants.h"
 
+#include <TROOT.h>
+
 #include <Event.h>
 
 #include <vector>

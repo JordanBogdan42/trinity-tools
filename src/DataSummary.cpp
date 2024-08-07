@@ -3,6 +3,7 @@
 #include "constants.h"
 #include "rootils.h"
 
+#include <TROOT.h>
 #include <TTree.h>
 #include <TFile.h>
 

@@ -1,6 +1,8 @@
 #ifndef DataSummary_H
 #define DataSummary_H
 
+#include <TROOT.h>
+
 #include <vector>
 #include <cmath>
 

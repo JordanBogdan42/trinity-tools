@@ -1,6 +1,8 @@
 #ifndef rootils_H
 #define rootils_H
 
+#include <TROOT.h>
+
 #include <Event.h>
 
 #include <vector>
