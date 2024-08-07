@@ -3,8 +3,8 @@
 
 using namespace std;
 
-const string dataDir = "/storage/hive/project/phy-otte/shared/Trinity/Data/";
-const string outDir = "/storage/hive/project/phy-otte/shared/Trinity/DataAnalysis/DataSummary/Output/";
-const int maxCh = 256;
+extern const string dataDir;
+extern const string outDir;
+extern const int maxCh;
 
 #endif
