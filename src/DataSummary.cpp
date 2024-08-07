@@ -6,6 +6,7 @@
 #include <TROOT.h>
 #include <TTree.h>
 #include <TFile.h>
+#include <TH1.h>
 
 #include <Event.h>
 #include <Pulse.h>
@@ -32,7 +33,7 @@ void DataSummary::ReadEv(string readStr){
 
     DIR *dir;
     struct dirent *ent;
-    if((dir = opendir(readStr)) != NULL){
+    if((dir = opendir(readStr.c_str())) != NULL){
         while((ent = readdir(dir)) != NULL){
             string fileStr = Form("%s%s",readStr.c_str(),ent->d_name);
             if(fileStr.substr(fileStr.find_last_of(".")+1) == "root"){
@@ -42,7 +43,7 @@ void DataSummary::ReadEv(string readStr){
                 ev = new Event();
                 SetBranches(&ev);
                 int nEntries = tree->GetEntries();
-                if(nEntries = 0){
+                if(nEntries == 0){
                     cout << "File has no data in the \"Test\" branch...skipping"
                     break;
                 }
@@ -77,14 +78,14 @@ void DataSummary::ReadEv(string readStr){
                 }
                 delete ev;
                 delete tree;
-                delete nEntries;
+                delete &nEntries;
 
                 tree = (TTree*)f0->Get("HLED");
                 ev = new Event();
                 SetBranches(&ev);
                 nEntries = tree->GetEntries();
-                if(nEntries = 0){
-                    cout << "File has no data in the \"HLED\" branch...skipping"
+                if(nEntries == 0){
+                    cout << "File has no data in the \"HLED\" branch...skipping";
                     break;
                 }
                 cout << "\"HLED\" Events: " << nEntries << endl;
