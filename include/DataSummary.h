@@ -2,6 +2,7 @@
 #define DataSummary_H
 
 #include <vector>
+#include <cmath>
 
 using namespace std;
 

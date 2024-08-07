@@ -1,5 +1,6 @@
 #include "DataSummary.h"
 
 int main(int argc, char **argv){
-    DataSummary(argv[1]);
+    char* input = argv[1]
+    DataSummary(input);
 }
