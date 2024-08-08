@@ -2,7 +2,7 @@
 #define DataSummary_H
 
 #include "TestDtStruct.h"
-#include "HLEDDTStruct.h"
+#include "HLEDDtStruct.h"
 
 #include <TROOT.h>
 

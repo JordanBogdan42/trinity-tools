@@ -12,4 +12,6 @@ struct TestDtStruct {
     ULong64_t time;
     TestDtStruct();
     void Avg();
-}
+};
+
+#endif

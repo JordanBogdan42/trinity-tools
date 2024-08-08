@@ -94,7 +94,7 @@ void DataSummary::ReadEv(string readStr){
 
                     tree->GetEntry(evCount);
                     hledEv.push_back(HLEDDtStruct());
-                    hledEv.time = ev->GetTBTime();
+                    hledEv[hledEv.size()-1].time = ev->GetTBTime();
                     Pulse *pulse;
                     for(int i = 0; i < maxCh; i++){
                         pulse = new Pulse(ev->GetSignalValue(i));

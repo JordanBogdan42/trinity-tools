@@ -3,10 +3,12 @@
 
 #include <TROOT.h>
 
-struct DataDtStruct {
+struct HLEDDtStruct {
     Double_t amplitude;
     Double_t amplitudeSTD;
     ULong64_t time;
-    DataDtStruct();
+    HLEDDtStruct();
     void Avg();
-}
+};
+
+#endif
