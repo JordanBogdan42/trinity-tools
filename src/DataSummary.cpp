@@ -2,6 +2,8 @@
 
 #include "constants.h"
 #include "rootils.h"
+#include "TestDtStruct.h"
+#include "HLEDDtStruct.h"
 
 #include <TROOT.h>
 #include <TTree.h>
@@ -19,8 +21,8 @@
 using namespace std;
 
 DataSummary::DataSummary(char* dateStr){
-    evTimes = vector<vector<ULong64_t>>(2,vector<ULong64_t>());
-    evMeans = vector<vector<Double_t>>(7,vector<Double_t>());
+    hledEv = vector<HLEDDtStruct>();
+    testEv = vector<TestDtStruct>();
     pixMeans = vector<vector<Double_t>>(7,vector<Double_t>(maxCh,0.0));
 
     string evStr = Form("%s%s/RawDataMerged/",dataDir.c_str(),dateStr);
@@ -50,10 +52,8 @@ void DataSummary::ReadEv(string readStr){
                 cout << "\"Test\" Events: " << nEntries << endl;
                 for(int evCount = 0; evCount < nEntries; evCount++){
                     tree->GetEntry(evCount);
-                    evTimes[1].push_back(ev->GetTBTime());
-                    for(int i = 2; i < 7; i++){
-                        evMeans[i].push_back(0.0);
-                    }
+                    testEv.push_back(TestDtStruct());
+                    testEv[testEv.size()-1].time = ev->GetTBTime();
                     Pulse *pulse;
                     for(int i = 0; i < maxCh; i++){
                         pulse = new Pulse(ev->GetSignalValue(i));
@@ -64,17 +64,15 @@ void DataSummary::ReadEv(string readStr){
                         pixMeans[5][i] += pulse->GetCharge();
                         pixMeans[6][i] += pulse->GetTimePeak();
 
-                        evMeans[2][evMeans[2].size()-1] += pulse->GetPedestal();
-                        evMeans[3][evMeans[3].size()-1] += pulse->GetPedestalRMS();
-                        evMeans[4][evMeans[4].size()-1] += pulse->GetAmplitude();
-                        evMeans[5][evMeans[5].size()-1] += pulse->GetCharge();
-                        evMeans[6][evMeans[6].size()-1] += pulse->GetTimePeak();
+                        testEv[testEv.size()-1].pedestal += pulse->GetPedestal();
+                        testEv[testEv.size()-1].pedestalRMS += pulse->GetPedestalRMS();
+                        testEv[testEv.size()-1].amplitude += pulse->GetAmplitude();
+                        testEv[testEv.size()-1].charge += pulse->GetCharge();
+                        testEv[testEv.size()-1].timePeak += pulse->GetTimePeak();
                         
                         delete pulse;
                     }
-                    for(int i = 2; i < 7; i++){
-                        evMeans[i][evMeans[i].size()-1] /= maxCh;
-                    }
+                    testEv[testEv.size()-1].Avg();
                 }
                 delete ev;
                 delete tree;
@@ -95,8 +93,8 @@ void DataSummary::ReadEv(string readStr){
                     ledDist->Reset();
 
                     tree->GetEntry(evCount);
-                    evTimes[0].push_back(ev->GetTBTime());
-                    evMeans[0].push_back(0.0);
+                    hledEv.push_back(HLEDDtStruct());
+                    hledEv.time = ev->GetTBTime();
                     Pulse *pulse;
                     for(int i = 0; i < maxCh; i++){
                         pulse = new Pulse(ev->GetSignalValue(i));
@@ -106,19 +104,16 @@ void DataSummary::ReadEv(string readStr){
 
                         amps[i] = pulse->GetAmplitude();
 
-                        evMeans[0][evMeans[0].size()-1] += pulse->GetAmplitude();
+                        hledEv[hledEv.size()-1].amplitude += pulse->GetAmplitude();
                         
                         delete pulse;
-                    }
-                    for(int i = 0; i < 2; i++){
-                        evMeans[i][evMeans[i].size()-1] /= maxCh;
                     }
                     Double_t medianLED = Median(amps);
                     for(int i = 0; i < maxCh; i++){
                         ledDist->Fill(amps[i]/medianLED);
                     }
-                    evMeans[0][evMeans[0].size()-1] /= maxCh;
-                    evMeans[1][evMeans[1].size()-1] =  ledDist->GetStdDev();
+                    hledEv[hledEv.size()-1].Avg();
+                    hledEv[hledEv.size()-1].amplitudeSTD =  ledDist->GetStdDev();
                 }
                 delete ledDist;
                 delete ev;
@@ -126,8 +121,8 @@ void DataSummary::ReadEv(string readStr){
             }
         }
     }
-    int hledEnt = evTimes[0].size();
-    int testEnt = evTimes[1].size();
+    int hledEnt = hledEv.size();
+    int testEnt = testEv.size();
     for(int i = 0; i < maxCh; i++){
         for(int j = 0; j < 2; j++){
             pixMeans[j][i] /= hledEnt;
