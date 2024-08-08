@@ -44,8 +44,8 @@ void DataSummary::ReadEv(string readStr){
                 tree->SetBranchAddress("Events", &ev);
                 int nEntries = tree->GetEntries();
                 if(nEntries == 0){
-                    cout << "File has no data in the \"Test\" branch...skipping";
-                    break;
+                    cout << "File has no data in the \"Test\" branch...skipping" << endl;
+                    continue;
                 }
                 cout << "\"Test\" Events: " << nEntries << endl;
                 for(int evCount = 0; evCount < nEntries; evCount++){
@@ -85,8 +85,8 @@ void DataSummary::ReadEv(string readStr){
                 tree->SetBranchAddress("Events", &ev);
                 nEntries = tree->GetEntries();
                 if(nEntries == 0){
-                    cout << "File has no data in the \"HLED\" branch...skipping";
-                    break;
+                    cout << "File has no data in the \"HLED\" branch...skipping" << endl;
+                    continue;
                 }
                 cout << "\"HLED\" Events: " << nEntries << endl;
                 TH1 *ledDist = new TH1F("hledDist","Amplitudes normalized to camera median",100,0,2);
