@@ -76,7 +76,6 @@ void DataSummary::ReadEv(string readStr){
                 }
                 delete ev;
                 delete tree;
-                delete &nEntries;
 
                 tree = (TTree*)f0->Get("HLED");
                 ev = new Event();
