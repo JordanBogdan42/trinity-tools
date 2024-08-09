@@ -2,13 +2,13 @@
 
 #include "constants.h"
 #include "rootils.h"
-#include "TestDtStruct.h"
-#include "HLEDDtStruct.h"
+#include "DtStruct.h"
 
 #include <TROOT.h>
 #include <TTree.h>
 #include <TFile.h>
 #include <TH1.h>
+#include <TH2.h>
 
 #include <Event.h>
 #include <Pulse.h>
@@ -21,8 +21,8 @@
 using namespace std;
 
 DataSummary::DataSummary(char* dateStr){
-    hledEv = vector<HLEDDtStruct>();
-    testEv = vector<TestDtStruct>();
+    hledEv = vector<DtStruct>();
+    testEv = vector<DtStruct>();
     pixMeans = vector<vector<Double_t>>(7,vector<Double_t>(maxCh,0.0));
 
     string evStr = Form("%s%s/RawDataMerged/",dataDir.c_str(),dateStr);
@@ -52,7 +52,7 @@ void DataSummary::ReadEv(string readStr){
                 cout << "\"Test\" Events: " << nEntries << endl;
                 for(int evCount = 0; evCount < nEntries; evCount++){
                     tree->GetEntry(evCount);
-                    testEv.push_back(TestDtStruct());
+                    testEv.push_back(DtStruct(false));
                     testEv[testEv.size()-1].time = ev->GetTBTime();
                     Pulse *pulse;
                     for(int i = 0; i < maxCh; i++){
@@ -64,11 +64,11 @@ void DataSummary::ReadEv(string readStr){
                         pixMeans[5][i] += pulse->GetCharge();
                         pixMeans[6][i] += pulse->GetTimePeak();
 
-                        testEv[testEv.size()-1].pedestal += pulse->GetPedestal();
-                        testEv[testEv.size()-1].pedestalRMS += pulse->GetPedestalRMS();
-                        testEv[testEv.size()-1].amplitude += pulse->GetAmplitude();
-                        testEv[testEv.size()-1].charge += pulse->GetCharge();
-                        testEv[testEv.size()-1].timePeak += pulse->GetTimePeak();
+                        testEv[testEv.size()-1].data[0] += pulse->GetPedestal();
+                        testEv[testEv.size()-1].data[1] += pulse->GetPedestalRMS();
+                        testEv[testEv.size()-1].data[2] += pulse->GetAmplitude();
+                        testEv[testEv.size()-1].data[3] += pulse->GetCharge();
+                        testEv[testEv.size()-1].data[4] += pulse->GetTimePeak();
                         
                         delete pulse;
                     }
@@ -92,7 +92,7 @@ void DataSummary::ReadEv(string readStr){
                     ledDist->Reset();
 
                     tree->GetEntry(evCount);
-                    hledEv.push_back(HLEDDtStruct());
+                    hledEv.push_back(DtStruct(true));
                     hledEv[hledEv.size()-1].time = ev->GetTBTime();
                     Pulse *pulse;
                     for(int i = 0; i < maxCh; i++){
@@ -103,7 +103,7 @@ void DataSummary::ReadEv(string readStr){
 
                         amps[i] = pulse->GetAmplitude();
 
-                        hledEv[hledEv.size()-1].amplitude += pulse->GetAmplitude();
+                        hledEv[hledEv.size()-1].data[0] += pulse->GetAmplitude();
                         
                         delete pulse;
                     }
@@ -112,7 +112,7 @@ void DataSummary::ReadEv(string readStr){
                         ledDist->Fill(amps[i]/medianLED);
                     }
                     hledEv[hledEv.size()-1].Avg();
-                    hledEv[hledEv.size()-1].amplitudeSTD =  ledDist->GetStdDev();
+                    hledEv[hledEv.size()-1].data[1] =  ledDist->GetStdDev();
                 }
                 delete ledDist;
                 delete ev;
@@ -134,4 +134,32 @@ void DataSummary::ReadEv(string readStr){
     for(int i = 0; i < maxCh; i++){
         pixMeans[1][i] /= medianLED;
     }
+}
+
+void DataSummary::PlotCamera(int data){
+    delete camera;
+    camera = new TH2F("Trinity Camera",titles[data].c_str(),16,-0.5,15.5,16,-0.5,15.5);
+    for(int i = 0; i < maxCh; i++){
+        int nx, ny;
+        FindBin(i,&nx,&ny);
+        camera->SetBinContent(nx+1,ny+1,pixMeans[data][i]);
+    }
+    camera->SetStats(0);
+    DrawMUSICBoundaries();
+}
+
+TH2F DataSummary::PlotPedestal(){
+    PlotCamera(2);
+    return *camera;
+}
+
+void DataSummary::PlotDt(bool isHLED, int data){
+    vector<DtStruct> *thisVec;
+    if(isHLED){
+        thisVec = &hledEv;
+    }
+    else{
+        thisVec = &testEv;
+    }
+    cout << (*thisVec)[0].data[data] << endl;
 }

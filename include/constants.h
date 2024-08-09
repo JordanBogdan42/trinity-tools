@@ -2,11 +2,13 @@
 #define constants_H
 
 #include <string>
+#include <vector>
 
 using namespace std;
 
 extern const string dataDir;
 extern const string outDir;
 extern const int maxCh;
+extern const vector<string> titles;
 
 #endif

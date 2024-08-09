@@ -11,7 +11,7 @@
 using namespace std;
 
 Double_t Median(vector<Double_t> v);
-void FindBin(int pixelID, int);
+void FindBin(int pixelID, int *nx, int *ny);
 void DrawMUSICBoundaries();
 
 #endif
