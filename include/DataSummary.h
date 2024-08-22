@@ -17,12 +17,13 @@ class DataSummary {
 		vector<DtStruct> hledEv;
 		vector<vector<Double_t>> pixMeans;
 		TH2F *camera;
+		TH2F *ddt;
 		void ReadEv(string readStr);
-		void PlotCamera(int data);
-		void PlotDt(bool isHLED, int data);
+		void PlotCamera(int dp);
+		void PlotDt(bool isHLED, int dp);
 	public:
 		DataSummary(char* dateStr);
-		TH2F PlotPedestal();
+		vector<TH2F> PlotPedestal();
 };
 
 #endif

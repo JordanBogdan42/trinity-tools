@@ -17,6 +17,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 
@@ -24,6 +25,8 @@ DataSummary::DataSummary(char* dateStr){
     hledEv = vector<DtStruct>();
     testEv = vector<DtStruct>();
     pixMeans = vector<vector<Double_t>>(7,vector<Double_t>(maxCh,0.0));
+    camera = new TH2F();
+    ddt = new TH2F();
 
     string evStr = Form("%s%s/RawDataMerged/",dataDir.c_str(),dateStr);
     ReadEv(evStr);
@@ -134,26 +137,27 @@ void DataSummary::ReadEv(string readStr){
     for(int i = 0; i < maxCh; i++){
         pixMeans[1][i] /= medianLED;
     }
+    cout << CompareStructTime(*testEv.begin(),*testEv.end()) << endl;
+    sort(testEv.begin(),testEv.end(),CompareStructTime);
+    sort(hledEv.begin(),hledEv.end(),CompareStructTime);
 }
 
-void DataSummary::PlotCamera(int data){
-    delete camera;
-    camera = new TH2F("Trinity Camera",titles[data].c_str(),16,-0.5,15.5,16,-0.5,15.5);
+void DataSummary::PlotCamera(int dp){
+    if(camera){delete camera;}
+    camera = new TH2F("Trinity Camera",hTitles[dp].c_str(),16,-0.5,15.5,16,-0.5,15.5);
     for(int i = 0; i < maxCh; i++){
         int nx, ny;
         FindBin(i,&nx,&ny);
-        camera->SetBinContent(nx+1,ny+1,pixMeans[data][i]);
+        camera->SetBinContent(nx+1,ny+1,pixMeans[dp][i]);
     }
     camera->SetStats(0);
-    DrawMUSICBoundaries();
+    vector<Double_t> hRange = {floor(*(min_element(pixMeans[dp].begin(),pixMeans[dp].end()))),floor(*(max_element(pixMeans[dp].begin(),pixMeans[dp].end())))};
+    Double_t cushion = (hRange[1] - hRange[0]) * 0.05;
+    camera->SetMinimum(hRange[0] - cushion);
+    camera->SetMaximum(hRange[1] + cushion);
 }
 
-TH2F DataSummary::PlotPedestal(){
-    PlotCamera(2);
-    return *camera;
-}
-
-void DataSummary::PlotDt(bool isHLED, int data){
+void DataSummary::PlotDt(bool isHLED, int dp){
     vector<DtStruct> *thisVec;
     if(isHLED){
         thisVec = &hledEv;
@@ -161,5 +165,44 @@ void DataSummary::PlotDt(bool isHLED, int data){
     else{
         thisVec = &testEv;
     }
-    cout << (*thisVec)[0].data[data] << endl;
+    if(ddt){delete ddt;}
+    vector<Double_t> yRange = {10000,0};
+    for(auto i: (*thisVec)){
+        if(i.data[dp] < yRange[0]){
+            yRange[0] = i.data[dp];
+        }
+        else if(i.data[dp] > yRange[1]){
+            yRange[1] = i.data[dp];
+        }
+    }
+    Double_t yCushion = (yRange[1] - yRange[0]) * 0.05;
+    ddt = new TH2F("Trinity Data over Time", //Name
+        dTitles[dp].c_str(), //Title
+        thisVec->size()/120, //number of bins on x axis
+        (*(*thisVec).begin()).time, //x axis minimum
+        (*thisVec).back().time, //x axis maximum
+        (yRange[1] - yRange[0] + (2*yCushion)) * 10, //number of bins on y axis
+        yRange[0] - yCushion, //y axis minimum
+        yRange[1] + yCushion //y axis maximum
+    );
+    for(auto i: (*thisVec)){
+        cout << "t: " << i.time << " val: " << i.data[dp] << endl;
+        ddt->Fill(i.time,i.data[dp]);
+    }
+    cout << (*(*thisVec).begin()).time << endl;
+    cout << (*thisVec).back().time << endl;
+    ddt->GetXaxis()->SetTimeDisplay(1);
+    ddt->GetXaxis()->SetTimeFormat("%H:%M");
+    ddt->GetXaxis()->SetTimeOffset(0,"gmt");
+    ddt->GetXaxis()->SetTitle("UTC Time of Events [HH:MM]");
+    ddt->SetStats(0);
+    ddt->SetMarkerStyle(6);
+    ddt->SetMarkerSize(6);
+    ddt->SetMarkerColor(1);
+}
+
+vector<TH2F> DataSummary::PlotPedestal(){
+    PlotCamera(2);
+    PlotDt(false,0);
+    return {*camera,*ddt};
 }

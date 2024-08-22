@@ -1,6 +1,7 @@
 #include "rootils.h"
 
 #include "constants.h"
+#include "DtStruct.h"
 
 #include <TROOT.h>
 #include <TBox.h>
@@ -26,12 +27,23 @@ Double_t Median(vector<Double_t> v)
     return(Double_t)(tempV[(n-1)/2]+tempV[n/2])/2.0; 
 }
 
+Double_t RMS(vector<Double_t> v)
+{
+	int n = v.size();
+	Double_t rms_val = 0;
+	for(auto i: v){
+		rms_val += pow((*i),2);
+	}
+	rms_val /= n;
+	return(Double_t)sqrt(rms_val);
+}
+
 void FindBin(int pixelID, int *nx, int *ny)
 {
 	int SIAB_Number = pixelID / 16;
 	int SIAB_Pixel_Number = pixelID % 16;
-	int SIAB_Pixel_Row = SIAB_Pixel_Number / 4;
-	int SIAB_Pixel_Col = SIAB_Pixel_Number % 4;
+	int SIAB_Pixel_Row = SIAB_Pixel_Number % 4;
+	int SIAB_Pixel_Col = SIAB_Pixel_Number / 4;
 	*nx = SIAB_Number % 4 * 4 + SIAB_Pixel_Col;
 	*ny = SIAB_Number / 4 * 4 + SIAB_Pixel_Row;
 }
@@ -53,4 +65,9 @@ void DrawMUSICBoundaries()
 		bn->SetY2((i/8)*4+3.5);
 		bn->Draw();
 	}
+}
+
+bool CompareStructTime(const DtStruct &a, const DtStruct &b)
+{
+	return a.time < b.time;
 }
