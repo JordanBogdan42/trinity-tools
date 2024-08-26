@@ -11,15 +11,21 @@
 using namespace std;
 
 int main(int argc, char **argv){
-    TCanvas *c_disp = new TCanvas("Display","CameraPlot",2500,1000);
-    c_disp->Divide(2,1);
     DataSummary test(argv[1]);
-    vector<TH2F> testH = test.PlotPedestal();
-    c_disp->cd(1);
-    testH[0].Draw("colz");
-    DrawMUSICBoundaries();
-    c_disp->cd(1)->SetRightMargin(0.15);
-    c_disp->cd(2);
-    testH[1].Draw("P");
-    c_disp->Print("test.png");
+    test.t_disp->Print("test.pdf[");
+    test.PlotHLED();
+    test.t_disp->Print("test.pdf");
+    test.PlotHLEDNorm();
+    test.t_disp->Print("test.pdf");
+    test.PlotPedestal();
+    test.t_disp->Print("test.pdf");
+    test.PlotPedestalRMS();
+    test.t_disp->Print("test.pdf");
+    test.PlotAmplitude();
+    test.t_disp->Print("test.pdf");
+    test.PlotCharge();
+    test.t_disp->Print("test.pdf");
+    test.PlotTimePeak();
+    test.t_disp->Print("test.pdf");
+    test.t_disp->Print("test.pdf]");
 }

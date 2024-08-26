@@ -11,5 +11,6 @@ extern const string outDir;
 extern const int maxCh;
 extern const vector<string> hTitles;
 extern const vector<string> dTitles;
+extern const vector<double> avgVals;
 
 #endif

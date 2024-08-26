@@ -9,6 +9,7 @@
 #include <TFile.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TCanvas.h>
 
 #include <Event.h>
 #include <Pulse.h>
@@ -27,6 +28,7 @@ DataSummary::DataSummary(char* dateStr){
     pixMeans = vector<vector<Double_t>>(7,vector<Double_t>(maxCh,0.0));
     camera = new TH2F();
     ddt = new TH2F();
+    t_disp = new TCanvas("Display","DataSummary",2500,1000);
 
     string evStr = Form("%s%s/RawDataMerged/",dataDir.c_str(),dateStr);
     ReadEv(evStr);
@@ -56,7 +58,7 @@ void DataSummary::ReadEv(string readStr){
                 for(int evCount = 0; evCount < nEntries; evCount++){
                     tree->GetEntry(evCount);
                     testEv.push_back(DtStruct(false));
-                    testEv[testEv.size()-1].time = ev->GetTBTime();
+                    testEv[testEv.size()-1].time = ev->GetTBTime()*1e-8;
                     Pulse *pulse;
                     for(int i = 0; i < maxCh; i++){
                         pulse = new Pulse(ev->GetSignalValue(i));
@@ -96,7 +98,7 @@ void DataSummary::ReadEv(string readStr){
 
                     tree->GetEntry(evCount);
                     hledEv.push_back(DtStruct(true));
-                    hledEv[hledEv.size()-1].time = ev->GetTBTime();
+                    hledEv[hledEv.size()-1].time = ev->GetTBTime()*1e-8;
                     Pulse *pulse;
                     for(int i = 0; i < maxCh; i++){
                         pulse = new Pulse(ev->GetSignalValue(i));
@@ -137,7 +139,6 @@ void DataSummary::ReadEv(string readStr){
     for(int i = 0; i < maxCh; i++){
         pixMeans[1][i] /= medianLED;
     }
-    cout << CompareStructTime(*testEv.begin(),*testEv.end()) << endl;
     sort(testEv.begin(),testEv.end(),CompareStructTime);
     sort(hledEv.begin(),hledEv.end(),CompareStructTime);
 }
@@ -157,24 +158,53 @@ void DataSummary::PlotCamera(int dp){
     camera->SetMaximum(hRange[1] + cushion);
 }
 
-void DataSummary::PlotDt(bool isHLED, int dp){
+void DataSummary::PlotDt(int dp){
     vector<DtStruct> *thisVec;
-    if(isHLED){
+    int dpt = dp - (dp >= 2)*2;
+    if(dp<2){
         thisVec = &hledEv;
     }
     else{
         thisVec = &testEv;
     }
     if(ddt){delete ddt;}
-    vector<Double_t> yRange = {10000,0};
+    //below finds y axis range s.t. it includes 90% of points; purpose is to neglect outliers as opposed to just using min and max 
+    vector<int> yRangeInd(2);
+    vector<Double_t> valSort;
     for(auto i: (*thisVec)){
-        if(i.data[dp] < yRange[0]){
-            yRange[0] = i.data[dp];
-        }
-        else if(i.data[dp] > yRange[1]){
-            yRange[1] = i.data[dp];
-        }
+        valSort.push_back(i.data[dpt]);
     }
+    sort(valSort.begin(),valSort.end());
+    int valSize = valSort.size();
+    double valInc;
+    if(valSize%2 != 0){
+        yRangeInd = {valSize/2 - 1,valSize/2 + 1};
+        valInc = 3;
+    }
+    else{
+        yRangeInd = {valSize/2 - 1, valSize/2};
+        valInc = 2;
+    }
+    while(valInc < valSize*0.999){
+        Double_t up = valSort[yRangeInd[1]+1] - valSort[yRangeInd[1]];
+        Double_t down = valSort[yRangeInd[0]] - valSort[yRangeInd[0]-1];
+        if(up < down){
+            ++yRangeInd[1];
+            if(yRangeInd[1] == valSize - 1){
+                yRangeInd[0] -= floor(valSize*0.999 - valInc);
+                break;
+            }
+        }
+        else{
+            --yRangeInd[0];
+            if(yRangeInd[0] == 0){
+                yRangeInd[1] += floor(valSize*0.999 - valInc);
+                break;
+            }
+        }
+        ++valInc;
+    }
+    vector<Double_t> yRange = {valSort[yRangeInd[0]],valSort[yRangeInd[1]]};
     Double_t yCushion = (yRange[1] - yRange[0]) * 0.05;
     ddt = new TH2F("Trinity Data over Time", //Name
         dTitles[dp].c_str(), //Title
@@ -186,11 +216,8 @@ void DataSummary::PlotDt(bool isHLED, int dp){
         yRange[1] + yCushion //y axis maximum
     );
     for(auto i: (*thisVec)){
-        cout << "t: " << i.time << " val: " << i.data[dp] << endl;
-        ddt->Fill(i.time,i.data[dp]);
+        ddt->Fill(i.time,i.data[dpt]);
     }
-    cout << (*(*thisVec).begin()).time << endl;
-    cout << (*thisVec).back().time << endl;
     ddt->GetXaxis()->SetTimeDisplay(1);
     ddt->GetXaxis()->SetTimeFormat("%H:%M");
     ddt->GetXaxis()->SetTimeOffset(0,"gmt");
@@ -201,8 +228,44 @@ void DataSummary::PlotDt(bool isHLED, int dp){
     ddt->SetMarkerColor(1);
 }
 
-vector<TH2F> DataSummary::PlotPedestal(){
-    PlotCamera(2);
-    PlotDt(false,0);
-    return {*camera,*ddt};
+void DataSummary::PlotAverages(int dp){
+    PlotCamera(dp);
+    PlotDt(dp);
+    if(t_disp){delete t_disp;}
+    t_disp = new TCanvas("Display","DataSummary",2500,1000);
+    t_disp->Divide(2,1);
+    t_disp->cd(1);
+    camera->Draw("colz");
+    DrawMUSICBoundaries();
+    t_disp->cd(1)->SetRightMargin(0.15);
+    t_disp->cd(2);
+    ddt->Draw("P");
+}
+
+void DataSummary::PlotHLED(){
+    PlotAverages(0);
+}
+
+void DataSummary::PlotHLEDNorm(){
+    PlotAverages(1);
+}
+
+void DataSummary::PlotPedestal(){
+    PlotAverages(2);
+}
+
+void DataSummary::PlotPedestalRMS(){
+    PlotAverages(3);
+}
+
+void DataSummary::PlotAmplitude(){
+    PlotAverages(4);
+}
+
+void DataSummary::PlotCharge(){
+    PlotAverages(5);
+}
+
+void DataSummary::PlotTimePeak(){
+    PlotAverages(6);
 }

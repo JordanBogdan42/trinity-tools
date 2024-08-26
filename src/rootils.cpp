@@ -32,7 +32,7 @@ Double_t RMS(vector<Double_t> v)
 	int n = v.size();
 	Double_t rms_val = 0;
 	for(auto i: v){
-		rms_val += pow((*i),2);
+		rms_val += pow(i,2);
 	}
 	rms_val /= n;
 	return(Double_t)sqrt(rms_val);

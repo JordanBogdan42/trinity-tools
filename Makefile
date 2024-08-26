@@ -81,3 +81,7 @@ $(BIN_DIR)/$(OBJ_DIR):
 -include $(OBJ:.o=.d)
 
 .SUFFIXES: .o
+
+clean:
+	-rm -rv $(OBJ_DIR)
+	-rm -rv $(EXE)

@@ -5,6 +5,7 @@
 
 #include <TROOT.h>
 #include <TH2.h>
+#include <TCanvas.h>
 
 #include <vector>
 #include <cmath>
@@ -16,14 +17,22 @@ class DataSummary {
 		vector<DtStruct> testEv;
 		vector<DtStruct> hledEv;
 		vector<vector<Double_t>> pixMeans;
-		TH2F *camera;
-		TH2F *ddt;
 		void ReadEv(string readStr);
 		void PlotCamera(int dp);
-		void PlotDt(bool isHLED, int dp);
+		void PlotDt(int dp);
+		void PlotAverages(int dp);
 	public:
+		TH2F *camera;
+		TH2F *ddt;
+		TCanvas *t_disp;
 		DataSummary(char* dateStr);
-		vector<TH2F> PlotPedestal();
+		void PlotHLED();
+		void PlotHLEDNorm();
+		void PlotPedestal();
+		void PlotPedestalRMS();
+		void PlotAmplitude();
+		void PlotCharge();
+		void PlotTimePeak();
 };
 
 #endif
