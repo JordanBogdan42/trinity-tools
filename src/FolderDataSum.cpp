@@ -41,4 +41,5 @@ int main(int argc, char **argv){
     ds.PlotPSF();
     ds.t_disp->Print((outStr+".pdf").c_str());
     ds.t_disp->Print((outStr+".pdf]").c_str());
+    system(Form("chmod 660 %s",(outStr+".pdf").c_str()));
 }
