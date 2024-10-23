@@ -16,6 +16,7 @@ Double_t Median(vector<Double_t> v);
 Double_t RMS(vector<Double_t> v);
 void FindBin(int pixelID, int *nx, int *ny);
 void DrawMUSICBoundaries();
-bool CompareStructTime(const DtStruct &a, const DtStruct &b);
+Double_t ErfcIntegrand(Double_t x, Double_t *par);
+Double_t ConvolutedRMSFunction(Double_t *x, Double_t *par);
 
 #endif

@@ -5,11 +5,15 @@
 
 #include <TROOT.h>
 #include <TBox.h>
+#include <TF1.h>
+#include <TMath.h>
+#include <TGraphErrors.h>
 
 #include <Event.h>
 
 #include <vector>
 #include <cmath>
+#include "Math/Integrator.h"
 
 Double_t Median(vector<Double_t> v)
 {
@@ -67,7 +71,35 @@ void DrawMUSICBoundaries()
 	}
 }
 
-bool CompareStructTime(const DtStruct &a, const DtStruct &b)
-{
-	return a.time < b.time;
+Double_t ErfcIntegrand(Double_t x, Double_t *par) {
+    // Define the Erfc function to be integrated
+    return par[0] + par[1] * TMath::Erfc((x - par[2]) / (sqrt(2) * par[3]));
+}
+
+Double_t ConvolutedRMSFunction(Double_t *x, Double_t *par) {
+    // Parameters:
+    // par[0]: pedestal
+    // par[1]: amplitude
+    // par[2]: mean (mu)
+    // par[3]: sigma
+
+    // x[0] is the variable (angle of the camera row in this context)
+    Double_t x_center = x[0];
+    
+    // Define the pixel size (0.3 degrees in both horizontal and vertical)
+    //Double_t pixelSize = 0.3;
+    
+    // Compute the low and high edges of the pixel
+    Double_t lowEdge = x_center - 0.5; //* pixelSize;
+    Double_t highEdge = x_center + 0.5; //* pixelSize;
+    
+    // Lambda function for the integrand, capturing the parameters by reference
+    auto integrand = [&](double xi) {
+        return ErfcIntegrand(xi, par);
+    };
+    
+    // Numerical integration of Erfc over the pixel range
+    ROOT::Math::IntegratorOneDim integrator;
+    Double_t integral = integrator.Integral(integrand, lowEdge, highEdge);
+    return integral;
 }

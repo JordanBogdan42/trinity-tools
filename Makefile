@@ -11,7 +11,7 @@ BIN_DIR := .
 SRC_DIR := $(BIN_DIR)/src
 INC_DIR := $(BIN_DIR)/include
 OBJ_DIR := $(BIN_DIR)/obj
-EXE := $(BIN_DIR)/test
+EXE := $(BIN_DIR)/FolderDataSum
 DICT_DIR := ${EXACT_DIR}/dict
 
 ARCH := $(shell uname)
