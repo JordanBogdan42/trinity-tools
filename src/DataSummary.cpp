@@ -32,6 +32,16 @@
 using namespace std;
 
 DataSummary::DataSummary(char* dateStr){
+    avgEv = 0;
+    ampDist = 0;
+    hledMean = 0;
+    hledNMean = 0;
+    pedMean = 0;
+    pedRMSMean = 0;
+    ampMean = 0;
+    qMean = 0;
+    ptMean = 0;
+    psfSigma = 0;
     hledEv = vector<DtStruct>();
     testEv = vector<DtStruct>();
     pixMeans = vector<vector<Double_t>>(7,vector<Double_t>(maxCh,0.0));
@@ -57,6 +67,8 @@ void DataSummary::ReadEv(string readStr){
     TTree *tree;
     Event *ev;
 
+    int countF = 0;
+
     DIR *dir;
     struct dirent *ent;
     if((dir = opendir(readStr.c_str())) != NULL){
@@ -73,6 +85,7 @@ void DataSummary::ReadEv(string readStr){
                     cout << "File has no data in the \"Test\" branch...skipping" << endl;
                     continue;
                 }
+                countF++;
                 cout << "\"Test\" Events: " << nEntries << endl;
                 for(int evCount = 0; evCount < nEntries; evCount++){
                     tree->GetEntry(evCount);
@@ -120,6 +133,14 @@ void DataSummary::ReadEv(string readStr){
     }
     sort(testEv.begin(),testEv.end());
     sort(hledEv.begin(),hledEv.end());
+    avgEv = testEnt/countF;
+    hledMean = std::accumulate(pixMeans[0].begin(),pixMeans[0].end())/maxCh;
+    hledNMean = std::accumulate(pixMeans[1].begin(),pixMeans[1].end())/maxCh;
+    pedMean = std::accumulate(pixMeans[2].begin(),pixMeans[2].end())/maxCh;
+    pedRMSMean = std::accumulate(pixMeans[3].begin(),pixMeans[3].end())/maxCh;
+    ampMean = std::accumulate(pixMeans[4].begin(),pixMeans[4].end())/maxCh;
+    qMean = std::accumulate(pixMeans[5].begin(),pixMeans[5].end())/maxCh;
+    ptMean = std::accumulate(pixMeans[6].begin(),pixMeans[6].end())/maxCh;
 }
 
 bool DataSummary::isHLED(Event *&ev){
@@ -478,11 +499,13 @@ void DataSummary::PlotFF(){
     gStyle->SetOptStat(1100);
     t_disp->cd();
     misc1->Draw("hist");
-    /*TPaveStats *st = (TPaveStats*)t_disp->GetPrimitive("stats");
-    st->AddText("aaa = 33");
-    cout << "3" << endl;
-    st->DrawClone();
-    cout << "4" << endl;*/
+
+    double stats[4];
+    misc1->GetStats(stats);
+    double tvar1 = (stats[0] > 0) ? (stats[2] / stats[0]) : 0.0;
+    double tvar2 = (stats[0] > 0) ? (stats[3] / stats[0] - tvar1 * tvar1) : 0.0;
+    double tvar3 = (tvar2 > 0) ? std::sqrt(tvar2) : 0.0;
+    ampDist = tvar3 / tvar1;
 }
 
 void DataSummary::PlotHLED(){
@@ -591,4 +614,9 @@ void DataSummary::PlotPSF(){
     misc1->Draw("hist");
     misc2->Draw("P same");
     pt->Draw();
+
+    psfSigma = sigma;
+}
+int DataSummary::GetAvgEv(){
+    return avgEv;
 }

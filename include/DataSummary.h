@@ -22,6 +22,16 @@ using namespace std;
 
 class DataSummary {
 	private:
+		double avgEv;
+		double ampDist;
+		double hledMean;
+		double hledNMean;
+		double pedMean;
+		double pedRMSMean;
+		double ampMean;
+		double qMean;
+		double ptMean;
+		double psfSigma;
 		vector<DtStruct> testEv;
 		vector<DtStruct> hledEv;
 		vector<vector<Double_t>> pixMeans;
@@ -58,6 +68,15 @@ class DataSummary {
 		void PlotCharge();
 		void PlotTimePeak();
 		void PlotPSF();
+		double GetAvgEv();
+		double GetAmpDist();
+		double GetHLEDMean();
+		double GetHLEDNMean();
+		double GetPedMean();
+		double GetPedRMSMean();
+		double GetqMean();
+		double GetPTMean();
+		double GetPSFSigma();
 };
 
 #endif
