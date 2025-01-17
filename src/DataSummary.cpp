@@ -42,6 +42,7 @@ DataSummary::DataSummary(char* dateStr){
     qMean = 0;
     ptMean = 0;
     psfSigma = 0;
+    trTh = vector<int>();
     hledEv = vector<DtStruct>();
     testEv = vector<DtStruct>();
     pixMeans = vector<vector<Double_t>>(7,vector<Double_t>(maxCh,0.0));
@@ -59,8 +60,10 @@ DataSummary::DataSummary(char* dateStr){
     t_disp = new TCanvas("Display","DataSummary",2500,1000);
 
     string evStr = Form("%s%s/RawDataMerged/",dataDir.c_str(),dateStr);
+    string logDir = Form("%s%s/LOGS/rc.log",dataDir.c_str(),dateStr);
     ReadEv(evStr);
     FillTrig();
+    ReadTrThresholds(logDir);
 }
 
 void DataSummary::ReadEv(string readStr){
@@ -134,13 +137,13 @@ void DataSummary::ReadEv(string readStr){
     sort(testEv.begin(),testEv.end());
     sort(hledEv.begin(),hledEv.end());
     avgEv = testEnt/countF;
-    hledMean = std::accumulate(pixMeans[0].begin(),pixMeans[0].end())/maxCh;
-    hledNMean = std::accumulate(pixMeans[1].begin(),pixMeans[1].end())/maxCh;
-    pedMean = std::accumulate(pixMeans[2].begin(),pixMeans[2].end())/maxCh;
-    pedRMSMean = std::accumulate(pixMeans[3].begin(),pixMeans[3].end())/maxCh;
-    ampMean = std::accumulate(pixMeans[4].begin(),pixMeans[4].end())/maxCh;
-    qMean = std::accumulate(pixMeans[5].begin(),pixMeans[5].end())/maxCh;
-    ptMean = std::accumulate(pixMeans[6].begin(),pixMeans[6].end())/maxCh;
+    hledMean = accumulate(pixMeans[0].begin(),pixMeans[0].end())/maxCh;
+    hledNMean = accumulate(pixMeans[1].begin(),pixMeans[1].end())/maxCh;
+    pedMean = accumulate(pixMeans[2].begin(),pixMeans[2].end())/maxCh;
+    pedRMSMean = accumulate(pixMeans[3].begin(),pixMeans[3].end())/maxCh;
+    ampMean = accumulate(pixMeans[4].begin(),pixMeans[4].end())/maxCh;
+    qMean = accumulate(pixMeans[5].begin(),pixMeans[5].end())/maxCh;
+    ptMean = accumulate(pixMeans[6].begin(),pixMeans[6].end())/maxCh;
 }
 
 bool DataSummary::isHLED(Event *&ev){
@@ -229,6 +232,40 @@ void DataSummary::AddHLEDEv(Event *&ev){
     hledEv[hledEv.size()-1].Avg();
     hledEv[hledEv.size()-1].data[1] =  ledDist->GetStdDev();
     delete ledDist;
+}
+
+void DataSummary::ReadTrThresholds(string readStr){
+    ifstream logFile(readStr);
+    string line, prevLine;
+    bool found = false;
+    if(!logFile.is_open()){
+        cout << "Error opening RC log file" << endl;
+    }
+    vector<int> tempTr = {0,0};
+    while(getline(logFile,line)){
+        if(found){
+            string trSetTime = line.substr(13,13);
+            for(char& c : trSetTim){
+                if(c=='_'){
+                    c = 'T';
+                }
+            }
+            time_t unixThresTime=convertToUnixTime("20"+trSetTime,0);
+            tempTr[0] = (int)unixThresTime;
+            trTh.push_back(tempTr);
+            tempTr = [0,0];
+            found = false;
+        }
+        size_t pos = line.find(trStr);
+        if(pos != string::npos){
+            string trValHex = line.substr(51,2);
+            int trVal = stoi(trValHex,nullptr,16);
+            tempTr[1] = trVal;
+            found = true;
+            prevLine = line;
+        }
+    }
+    logFile.close();
 }
 
 void DataSummary::FillCamera(int dp){
@@ -504,7 +541,7 @@ void DataSummary::PlotFF(){
     misc1->GetStats(stats);
     double tvar1 = (stats[0] > 0) ? (stats[2] / stats[0]) : 0.0;
     double tvar2 = (stats[0] > 0) ? (stats[3] / stats[0] - tvar1 * tvar1) : 0.0;
-    double tvar3 = (tvar2 > 0) ? std::sqrt(tvar2) : 0.0;
+    double tvar3 = (tvar2 > 0) ? sqrt(tvar2) : 0.0;
     ampDist = tvar3 / tvar1;
 }
 
@@ -617,6 +654,33 @@ void DataSummary::PlotPSF(){
 
     psfSigma = sigma;
 }
-int DataSummary::GetAvgEv(){
+vector<vector<int>> DataSummary::GetTrTh(){
+    return trTh;
+}
+double DataSummary::GetAvgEv(){
     return avgEv;
+}
+double DataSummary::GetAmpDist(){
+    return ampDist;
+}
+double DataSummary::GetHLEDMean(){
+    return hledMean;
+}
+double DataSummary::GetHLEDNMean(){
+    return hledNMean;
+}
+double DataSummary::GetPedMean(){
+    return pedMean;
+}
+double DataSummary::GetPedRMSMean(){
+    return pedRMSMean;
+}
+double DataSummary::GetqMean(){
+    return qMean;
+}
+double DataSummary::GetPTMean(){
+    return ptMean;
+}
+double DataSummary::GetPSFSigma(){
+    return psfSigma;
 }

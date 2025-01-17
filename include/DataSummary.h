@@ -32,6 +32,7 @@ class DataSummary {
 		double qMean;
 		double ptMean;
 		double psfSigma;
+		vector<vector<int>> trTh;
 		vector<DtStruct> testEv;
 		vector<DtStruct> hledEv;
 		vector<vector<Double_t>> pixMeans;
@@ -50,6 +51,7 @@ class DataSummary {
 		bool isHLED(Event *&ev);
 		void AddTestEv(Event *&ev);
 		void AddHLEDEv(Event *&ev);
+		void ReadTrThresholds(string readStr);
 		void FillCamera(int dp);
 		void FillDt(int dp);
 		void PlotAverages(int dp);
@@ -68,6 +70,7 @@ class DataSummary {
 		void PlotCharge();
 		void PlotTimePeak();
 		void PlotPSF();
+		vector<vector<int>> GetTrTh();
 		double GetAvgEv();
 		double GetAmpDist();
 		double GetHLEDMean();

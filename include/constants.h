@@ -14,5 +14,5 @@ extern const vector<string> hTitles;
 extern const vector<string> dTitles;
 extern const vector<double> avgVals;
 extern const vector<int> MUSICmap;
-
+extern const string trStr;
 #endif

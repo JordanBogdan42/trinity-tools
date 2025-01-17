@@ -36,7 +36,6 @@ int main(int argc, char **argv){
     ds.PlotHLEDNorm();
     ds.t_disp->Print((outStr+".pdf").c_str()); 
    
-
     ds.PlotPedestal();
     ds.t_disp->Print((outStr+".pdf").c_str());    
 
@@ -57,14 +56,14 @@ int main(int argc, char **argv){
 
     ds.t_disp->Print((outStr+".pdf]").c_str());
 
-    std::ofstream csvOutput;
+    ofstream csvOutput;
     csvOutput.open((outStr+".csv"));
     csvOutput << ds.GetAvgEv() << "," << ds.GetAmpDist() << "," << ds.GetHLEDMean() << "," << ds.GetHLEDNMean() << "," << ds.GetPedMean() << "," << ds.GetPedRMSMean() << "," << ds.GetqMean() << "," << ds.GetPTMean() << "," << ds.GetPSFSigma();
+    for(vector<int>& vec : ds.GetTrTh()){
+        csvOutput << ",(" << vec[0] << "," << vec[1] << ")";
+    }
     csvOutput.close();
     
     system(Form("chmod 660 %s",(outStr+".pdf").c_str()));
     system(Form("chmod 660 %s",(outStr+".csv").c_str()));
-    cout << "csv file " << outStr+".csv" << endl;
-
-    
 }
