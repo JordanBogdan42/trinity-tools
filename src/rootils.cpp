@@ -103,3 +103,16 @@ Double_t ConvolutedRMSFunction(Double_t *x, Double_t *par) {
     Double_t integral = integrator.Integral(integrand, lowEdge, highEdge);
     return integral;
 }
+
+// Function to convert a time string to Unix timestamp
+time_t convertToUnixTime(const string& timeString, int t_v) {
+    tm tm = {};
+    istringstream ss(timeString);
+    if (t_v == 1) { 
+    	ss >> get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+    } else {
+    	ss >> get_time(&tm, "%Y%m%dT%H%M%S");
+    }
+    time_t time_stamp = timegm(&tm);
+    return time_stamp;
+}

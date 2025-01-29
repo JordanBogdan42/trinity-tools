@@ -18,5 +18,6 @@ void FindBin(int pixelID, int *nx, int *ny);
 void DrawMUSICBoundaries();
 Double_t ErfcIntegrand(Double_t x, Double_t *par);
 Double_t ConvolutedRMSFunction(Double_t *x, Double_t *par);
+time_t convertToUnixTime(const string& timeString, int t_v);
 
 #endif

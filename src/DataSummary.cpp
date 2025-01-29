@@ -28,6 +28,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 
 using namespace std;
 
@@ -42,7 +43,7 @@ DataSummary::DataSummary(char* dateStr){
     qMean = 0;
     ptMean = 0;
     psfSigma = 0;
-    trTh = vector<int>();
+    trTh = vector<vector<int>>();
     hledEv = vector<DtStruct>();
     testEv = vector<DtStruct>();
     pixMeans = vector<vector<Double_t>>(7,vector<Double_t>(maxCh,0.0));
@@ -80,12 +81,19 @@ void DataSummary::ReadEv(string readStr){
             if(fileStr.substr(fileStr.find_last_of(".")+1) == "root"){
                 cout << "Loading file: " << fileStr << endl;
                 TFile *f0 = TFile::Open(fileStr.c_str());
+                if(!f0){
+                    cout << "File is a zombie...skipping" << endl;
+                    continue;
+                }
                 tree = (TTree*)f0->Get("Test");
                 ev = new Event();
                 tree->SetBranchAddress("Events", &ev);
                 int nEntries = tree->GetEntries();
                 if(nEntries == 0){
                     cout << "File has no data in the \"Test\" branch...skipping" << endl;
+                    delete ev;
+                    delete tree;
+                    f0->TFile::Close();
                     continue;
                 }
                 countF++;
@@ -114,6 +122,7 @@ void DataSummary::ReadEv(string readStr){
                 }
                 delete ev;
                 delete tree;
+                f0->TFile::Close();
             }
         }
     }
@@ -137,13 +146,13 @@ void DataSummary::ReadEv(string readStr){
     sort(testEv.begin(),testEv.end());
     sort(hledEv.begin(),hledEv.end());
     avgEv = testEnt/countF;
-    hledMean = accumulate(pixMeans[0].begin(),pixMeans[0].end())/maxCh;
-    hledNMean = accumulate(pixMeans[1].begin(),pixMeans[1].end())/maxCh;
-    pedMean = accumulate(pixMeans[2].begin(),pixMeans[2].end())/maxCh;
-    pedRMSMean = accumulate(pixMeans[3].begin(),pixMeans[3].end())/maxCh;
-    ampMean = accumulate(pixMeans[4].begin(),pixMeans[4].end())/maxCh;
-    qMean = accumulate(pixMeans[5].begin(),pixMeans[5].end())/maxCh;
-    ptMean = accumulate(pixMeans[6].begin(),pixMeans[6].end())/maxCh;
+    hledMean = accumulate(pixMeans[0].begin(),pixMeans[0].end(),0.0)/maxCh;
+    hledNMean = accumulate(pixMeans[1].begin(),pixMeans[1].end(),0.0)/maxCh;
+    pedMean = accumulate(pixMeans[2].begin(),pixMeans[2].end(),0.0)/maxCh;
+    pedRMSMean = accumulate(pixMeans[3].begin(),pixMeans[3].end(),0.0)/maxCh;
+    ampMean = accumulate(pixMeans[4].begin(),pixMeans[4].end(),0.0)/maxCh;
+    qMean = accumulate(pixMeans[5].begin(),pixMeans[5].end(),0.0)/maxCh;
+    ptMean = accumulate(pixMeans[6].begin(),pixMeans[6].end(),0.0)/maxCh;
 }
 
 bool DataSummary::isHLED(Event *&ev){
@@ -245,7 +254,7 @@ void DataSummary::ReadTrThresholds(string readStr){
     while(getline(logFile,line)){
         if(found){
             string trSetTime = line.substr(13,13);
-            for(char& c : trSetTim){
+            for(char& c : trSetTime){
                 if(c=='_'){
                     c = 'T';
                 }
@@ -253,7 +262,7 @@ void DataSummary::ReadTrThresholds(string readStr){
             time_t unixThresTime=convertToUnixTime("20"+trSetTime,0);
             tempTr[0] = (int)unixThresTime;
             trTh.push_back(tempTr);
-            tempTr = [0,0];
+            tempTr = {0,0};
             found = false;
         }
         size_t pos = line.find(trStr);
