@@ -59,12 +59,15 @@ DataSummary::DataSummary(char* dateStr){
     leg = new TLegend();
     pt = new TPaveText();
     t_disp = new TCanvas("Display","DataSummary",2500,1000);
+    isData = false;
 
     string evStr = Form("%s%s/RawDataMerged/",dataDir.c_str(),dateStr);
     string logDir = Form("%s%s/LOGS/rc.log",dataDir.c_str(),dateStr);
     ReadEv(evStr);
-    FillTrig();
-    ReadTrThresholds(logDir);
+    if(isData){
+        FillTrig();
+        ReadTrThresholds(logDir);
+    }
 }
 
 void DataSummary::ReadEv(string readStr){
@@ -126,33 +129,36 @@ void DataSummary::ReadEv(string readStr){
             }
         }
     }
-    int hledEnt = hledEv.size();
-    int testEnt = testEv.size();
-    for(int i = 0; i < maxCh; i++){
-        for(int j = 0; j < 2; j++){
-            pixMeans[j][i] /= hledEnt;
+    if(countF != 0){
+        isData = true;
+        int hledEnt = hledEv.size();
+        int testEnt = testEv.size();
+        for(int i = 0; i < maxCh; i++){
+            for(int j = 0; j < 2; j++){
+                pixMeans[j][i] /= hledEnt;
+            }
+            for(int j = 2; j < 7; j++){
+                pixMeans[j][i] /= testEnt;
+            }
         }
-        for(int j = 2; j < 7; j++){
-            pixMeans[j][i] /= testEnt;
+        for(int i = 0; i < 16; i++){
+            meanPedRMS[i] /= testEnt;
         }
+        Double_t medianLED = Median(pixMeans[1]);
+        for(int i = 0; i < maxCh; i++){
+            pixMeans[1][i] /= medianLED;
+        }
+        sort(testEv.begin(),testEv.end());
+        sort(hledEv.begin(),hledEv.end());
+        avgEv = testEnt/countF;
+        hledMean = accumulate(pixMeans[0].begin(),pixMeans[0].end(),0.0)/maxCh;
+        hledNMean = accumulate(pixMeans[1].begin(),pixMeans[1].end(),0.0)/maxCh;
+        pedMean = accumulate(pixMeans[2].begin(),pixMeans[2].end(),0.0)/maxCh;
+        pedRMSMean = accumulate(pixMeans[3].begin(),pixMeans[3].end(),0.0)/maxCh;
+        ampMean = accumulate(pixMeans[4].begin(),pixMeans[4].end(),0.0)/maxCh;
+        qMean = accumulate(pixMeans[5].begin(),pixMeans[5].end(),0.0)/maxCh;
+        ptMean = accumulate(pixMeans[6].begin(),pixMeans[6].end(),0.0)/maxCh;
     }
-    for(int i = 0; i < 16; i++){
-        meanPedRMS[i] /= testEnt;
-    }
-    Double_t medianLED = Median(pixMeans[1]);
-    for(int i = 0; i < maxCh; i++){
-        pixMeans[1][i] /= medianLED;
-    }
-    sort(testEv.begin(),testEv.end());
-    sort(hledEv.begin(),hledEv.end());
-    avgEv = testEnt/countF;
-    hledMean = accumulate(pixMeans[0].begin(),pixMeans[0].end(),0.0)/maxCh;
-    hledNMean = accumulate(pixMeans[1].begin(),pixMeans[1].end(),0.0)/maxCh;
-    pedMean = accumulate(pixMeans[2].begin(),pixMeans[2].end(),0.0)/maxCh;
-    pedRMSMean = accumulate(pixMeans[3].begin(),pixMeans[3].end(),0.0)/maxCh;
-    ampMean = accumulate(pixMeans[4].begin(),pixMeans[4].end(),0.0)/maxCh;
-    qMean = accumulate(pixMeans[5].begin(),pixMeans[5].end(),0.0)/maxCh;
-    ptMean = accumulate(pixMeans[6].begin(),pixMeans[6].end(),0.0)/maxCh;
 }
 
 bool DataSummary::isHLED(Event *&ev){
@@ -447,8 +453,8 @@ void DataSummary::PlotAverages(int dp){
     lin->SetLineColorAlpha(kGreen,0.6);
     lin->SetLineWidth(4);
 
-    ddt->Draw("P");
-    addt->Draw("P,SAME");
+    ddt->Draw("");
+    addt->Draw("SAME");
     lin->Draw("SAME");
 
     leg = new TLegend(0.1,0.90,0.9,0.94);
@@ -555,31 +561,52 @@ void DataSummary::PlotFF(){
 }
 
 void DataSummary::PlotHLED(){
-    PlotAverages(0);
+    if(hledEv.size() > 0){PlotAverages(0);}
+    else{
+        t_disp->Clear();
+    }
 }
 
 void DataSummary::PlotHLEDNorm(){
-    PlotAverages(1);
+    if(hledEv.size() > 0){PlotAverages(1);}
+    else{
+        t_disp->Clear();
+    }
 }
 
 void DataSummary::PlotPedestal(){
-    PlotAverages(2);
+    if(testEv.size() > 0){PlotAverages(2);}
+    else{
+        t_disp->Clear();
+    }
 }
 
 void DataSummary::PlotPedestalRMS(){
-    PlotAverages(3);
+    if(testEv.size() > 0){PlotAverages(3);}
+    else{
+        t_disp->Clear();
+    }
 }
 
 void DataSummary::PlotAmplitude(){
-    PlotAverages(4);
+    if(testEv.size() > 0){PlotAverages(4);}
+    else{
+        t_disp->Clear();
+    }
 }
 
 void DataSummary::PlotCharge(){
-    PlotAverages(5);
+    if(testEv.size() > 0){PlotAverages(5);}
+    else{
+        t_disp->Clear();
+    }
 }
 
 void DataSummary::PlotTimePeak(){
-    PlotAverages(6);
+    if(testEv.size() > 0){PlotAverages(6);}
+    else{
+        t_disp->Clear();
+    }
 }
 
 void DataSummary::PlotPSF(){
@@ -692,4 +719,8 @@ double DataSummary::GetPTMean(){
 }
 double DataSummary::GetPSFSigma(){
     return psfSigma;
+}
+
+bool DataSummary::hasData(){
+    return isData;
 }
